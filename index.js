@@ -9,6 +9,7 @@ import CourseRoutes from "./Kambaz/Courses/routes.js";
 import ModuleRoutes from "./Kambaz/Modules/routes.js";
 import AssignmentRoutes from "./Kambaz/Assignments/routes.js";
 import EnrollmentRoutes from "./Kambaz/Enrollments/routes.js";
+import mongoose from "mongoose";
 
 console.log("Environment variables:");
 console.log("NODE_ENV:", process.env.NODE_ENV);
@@ -16,6 +17,8 @@ console.log("NETLIFY_URL:", process.env.NETLIFY_URL);
 console.log("NODE_SERVER_DOMAIN:", process.env.NODE_SERVER_DOMAIN);
 console.log("SESSION_SECRET:", process.env.SESSION_SECRET ? "True" : "False");
 
+const CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kambaz"
+mongoose.connect(CONNECTION_STRING);
 const app = express()
 app.use(cors({
     credentials: true,
