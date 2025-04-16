@@ -1,4 +1,5 @@
 import Database from "../Database/index.js";
+import model from "./model.js";
 import { v4 as uuidv4 } from "uuid";
 
 // 获取所有注册记录
@@ -27,23 +28,22 @@ export function isUserEnrolledInCourse(userId, courseId) {
   );
 }
 
-// 注册用户到课程
-export function enrollUserInCourse(userId, courseId) {
-  // 检查是否已注册
-  if (isUserEnrolledInCourse(userId, courseId)) {
-    return { success: false, message: "User already enrolled in this course" };
-  }
-  
-  const newEnrollment = { _id: uuidv4(), user: userId, course: courseId };
-  Database.enrollments.push(newEnrollment);
-  return { success: true, enrollment: newEnrollment };
-}
 
-// 取消用户课程注册
-export function unenrollUserFromCourse(userId, courseId) {
-  const originalLength = Database.enrollments.length;
-  Database.enrollments = Database.enrollments.filter(
-    (enrollment) => !(enrollment.user === userId && enrollment.course === courseId)
-  );
-  return Database.enrollments.length !== originalLength;
+
+
+export async function findCoursesForUser(userId) {
+ const enrollments = await model.find({ user: userId }).populate("course");
+ return enrollments.map((enrollment) => enrollment.course);
 }
+export async function findUsersForCourse(courseId) {
+ const enrollments = await model.find({ course: courseId }).populate("user");
+ return enrollments.map((enrollment) => enrollment.user);
+}
+export function enrollUserInCourse(user, course) {
+  const newEnrollment = { user, course, _id: `${user}-${course}` };
+  return model.create(newEnrollment);
+ }
+ export function unenrollUserFromCourse(user, course) {
+  return model.deleteOne({ user, course });
+ }
+ 

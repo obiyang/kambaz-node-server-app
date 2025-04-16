@@ -1,49 +1,42 @@
-import Database from "../Database/index.js";
-import { v4 as uuidv4 } from "uuid";
+import Assignment from "./model.js";
 
 // 获取所有作业
-export function findAllAssignments() {
-  return Database.assignments;
-}
+export const findAllAssignments = async () => {
+  return await Assignment.find();
+};
 
 // 根据课程ID获取作业
-export function findAssignmentsForCourse(courseId) {
-  return Database.assignments.filter(
-    (assignment) => assignment.course === courseId
-  );
-}
+export const findAssignmentsForCourse = async (courseId) => {
+  return await Assignment.find({ course: courseId });
+};
 
 // 根据ID查找作业
-export function findAssignmentById(assignmentId) {
-  return Database.assignments.find(
-    (assignment) => assignment._id === assignmentId
-  );
-}
+export const findAssignmentById = async (assignmentId) => {
+  return await Assignment.findById(assignmentId);
+};
 
 // 创建新作业
-export function createAssignment(assignment) {
-  const newAssignment = { ...assignment, _id: uuidv4() };
-  Database.assignments = [...Database.assignments, newAssignment];
-  return newAssignment;
-}
+export const createAssignment = async (assignment) => {
+  // 如果没有提供_id，生成一个唯一ID
+  if (!assignment._id) {
+    // 使用MongoDB ObjectId的字符串表示作为ID
+    assignment._id = `A${Date.now()}`;
+  }
+  const newAssignment = new Assignment(assignment);
+  return await newAssignment.save();
+};
 
 // 更新作业
-export function updateAssignment(assignmentId, assignmentUpdates) {
-  const assignment = Database.assignments.find(
-    (assignment) => assignment._id === assignmentId
+export const updateAssignment = async (assignmentId, assignmentUpdates) => {
+  return await Assignment.findByIdAndUpdate(
+    assignmentId, 
+    { $set: assignmentUpdates }, 
+    { new: true }
   );
-  if (assignment) {
-    Object.assign(assignment, assignmentUpdates);
-    return assignment;
-  }
-  return null;
-}
+};
 
 // 删除作业
-export function deleteAssignment(assignmentId) {
-  const originalLength = Database.assignments.length;
-  Database.assignments = Database.assignments.filter(
-    (assignment) => assignment._id !== assignmentId
-  );
-  return Database.assignments.length !== originalLength;
-}
+export const deleteAssignment = async (assignmentId) => {
+  const result = await Assignment.deleteOne({ _id: assignmentId });
+  return result.deletedCount > 0;
+};
