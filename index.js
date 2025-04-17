@@ -53,9 +53,18 @@ mongoose.connect(CONNECTION_STRING)
 const app = express()
 
 // 添加详细的CORS配置日志
-const corsOrigin = process.env.NETLIFY_URL || "http://localhost:5173";
-console.log("CORS origin configured as:", corsOrigin);
-console.log("CORS origin without trailing slash:", corsOrigin.replace(/\/$/, ''));
+// 允许的域名列表，包括本地开发环境和Netlify域名
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://a6--sensational-begonia-7fa416.netlify.app",
+  "https://sensational-begonia-7fa416.netlify.app"
+];
+
+if (process.env.NETLIFY_URL) {
+  allowedOrigins.push(process.env.NETLIFY_URL);
+}
+
+console.log("CORS allowed origins:", allowedOrigins);
 
 app.use(cors({
     credentials: true,
@@ -68,20 +77,18 @@ app.use(cors({
         return callback(null, true);
       }
       
-      // 移除末尾斜杠进行比较
-      const originWithoutSlash = origin.replace(/\/$/, '');
-      const allowedOriginWithoutSlash = corsOrigin.replace(/\/$/, '');
-      
-      console.log("Comparing:", originWithoutSlash, "with allowed:", allowedOriginWithoutSlash);
-      
-      if (originWithoutSlash === allowedOriginWithoutSlash) {
-        console.log("✅ Origin allowed by CORS");
+      // 检查origin是否在允许列表中
+      if (allowedOrigins.some(allowedOrigin => origin.startsWith(allowedOrigin))) {
+        console.log("✅ Origin allowed by CORS:", origin);
         callback(null, true);
       } else {
-        console.log("❌ Origin rejected by CORS");
+        console.log("❌ Origin rejected by CORS:", origin);
+        console.log("Allowed origins:", allowedOrigins);
         callback(new Error(`Origin ${origin} not allowed by CORS`));
       }
     },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
   }
 ));
