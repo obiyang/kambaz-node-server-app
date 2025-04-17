@@ -3,14 +3,28 @@ import * as modulesDao from "../Modules/dao.js";
 import * as enrollmentsDao from "../Enrollments/dao.js";
 
 export default function CourseRoutes(app) {
-    app.post("/api/courses", async (req, res) => {
+  app.post("/api/courses", async (req, res) => {
+    try {
       const course = await dao.createCourse(req.body);
+      console.log("Course created:", course);
+      
       const currentUser = req.session["currentUser"];
+      console.log("Current user from session:", currentUser);
+      
       if (currentUser) {
+        console.log("Attempting to enroll user:", currentUser._id, "in course:", course._id);
         await enrollmentsDao.enrollUserInCourse(currentUser._id, course._id);
+        console.log("User enrolled successfully");
+      } else {
+        console.log("No current user in session, skipping enrollment");
       }
+      
       res.json(course);
-    });
+    } catch (error) {
+      console.error("Error creating course:", error);
+      res.status(500).json({ error: "Failed to create course" });
+    }
+  });
     
     app.post("/api/courses/:courseId/modules", async (req, res) => {
         const { courseId } = req.params;
